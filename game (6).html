@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏕️ GBA Camping Day & Night Survival 🏕️</title>
+    <style>
+        body {
+            background-color: #1a1a24;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+
+        .gba-console {
+            background-color: #8e44ad;
+            border: 8px solid #732d91;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 15px 0 #5c2375, 0 25px 30px rgba(0,0,0,0.7);
+            text-align: center;
+            width: 360px;
+            position: relative;
+        }
+
+        .game-screen {
+            background-color: #2ecc71; 
+            border: 15px solid #2c3e50;
+            border-radius: 15px;
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        .night-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 40, 0.65);
+            z-index: 15;
+            pointer-events: none;
+            display: none;
+        }
+
+        .pathway {
+            position: absolute;
+            left: 120px;
+            top: 0;
+            width: 120px;
+            height: 320px;
+            background-color: #dfb76c;
+        }
+
+        .screen-title {
+            color: #ffffff;
+            background: rgba(0,0,0,0.6);
+            margin: 0;
+            padding: 5px 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 25;
+        }
+
+        .game-object {
+            position: absolute;
+            font-size: 2rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+
+        .tree::after {
+            content: "🛑";
+            position: absolute;
+            font-size: 0.8rem;
+            bottom: -2px;
+            right: -2px;
+        }
+
+        .hud-status {
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 0.65rem;
+            text-align: left;
+            z-index: 30;
+            line-height: 1.4;
+        }
+
+        .fishing-game-ui {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            width: 90px;
+            height: 220px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #f1c40f;
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 50;
+            color: white;
+            font-size: 0.55rem;
+            padding: 5px;
+        }
+
+        .fishing-bar-container {
+            position: relative;
+            width: 24px;
+            height: 140px;
+            background: #334455;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #7f8c8d;
+        }
+
+        .fishing-green-zone {
+            position: absolute;
+            width: 100%;
+            height: 15px; 
+            background: #2ecc71;
+            left: 0;
+            top: 60px; 
+        }
+
+        .fishing-pointer {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #e74c3c;
+            border-top: 1px solid white;
+            border-bottom: 1px solid white;
+            top: 0;
+        }
+
+        .sleep-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 35px);
+            grid-template-rows: repeat(3, 35px);
+        }
+
+        .d-btn {
+            background-color: #2c3e50;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 3px 0 #1a252f;
+        }
+        .d-btn:active { transform: translateY(3px); box-shadow: none; }
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 3; }
+
+        .action-btns { display: flex; gap: 15px; }
+        .btn-a, .btn-b {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #c0392b;
+            background-color: #e74c3c;
+        }
+        .btn-a { transform: translateY(-5px); }
+        .btn-a:active { transform: translateY(-2px); box-shadow: none; }
+        .btn-b:active { transform: translateY(4px); box-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="gba-console">
+        <div class="game-screen" id="screen">
+            <h2 class="screen-title" id="map-title">MAP 1: CAMPING AREA</h2>
+            <div class="pathway"></div>
+            <div id="map-objects"></div>
+            
+            <div class="night-overlay" id="night-overlay"></div>
+
+            <div class="game-object" id="player" style="left: 160px; top: 280px; z-index: 20;">🚶‍♂️</div>
+
+            <div class="game-object" id="monster" style="left: -100px; top: -100px; display: none; z-index: 18;">👾</div>
+
+            <div class="hud-status" id="hud">
+                ☀️ SIANG<br>
+                ❤️HP: 100/100<br>
+                🍖LPR: 100/100<br>
+                🐟MNT: 0 | 🐠BKR: 0
+            </div>
+
+            <div class="fishing-game-ui" id="fishing-ui">
+                <div style="color: #f1c40f;">TAHAN A=DIEM</div>
+                <div class="fishing-bar-container">
+                    <div class="fishing-green-zone" id="green-zone"></div>
+                    <div class="fishing-pointer" id="pointer"></div>
+                </div>
+                <div id="fishing-progress">🏆 0/3</div>
+                <div style="font-size: 0.45rem; color: #bdc3c7;">B: BATAL</div>
+            </div>
+
+            <div class="sleep-screen" id="sleep-screen">Keesokan Harinya..</div>
+        </div>
+
+        <div class="controls">
+            <div class="d-pad">
+                <button class="d-btn btn-up" onmousedown="move('up')">▲</button>
+                <button class="d-btn btn-left" onmousedown="move('left')">◀</button>
+                <button class="d-btn btn-right" onmousedown="move('right')">▶</button>
+                <button class="d-btn btn-down" onmousedown="move('down')">▼</button>
+            </div>
+            <div class="action-btns">
+                <button class="btn-b" onmousedown="actionB()">B</button>
+                <button class="btn-a" onmousedown="pressA()" onmouseup="releaseA()">A</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        const monster = document.getElementById('monster');
+        const mapObjects = document.getElementById('map-objects');
+        const mapTitle = document.getElementById('map-title');
+        const hud = document.getElementById('hud');
+        const nightOverlay = document.getElementById('night-overlay');
+        const sleepScreen = document.getElementById('sleep-screen');
+        
+        const fishingUi = document.getElementById('fishing-ui');
+        const pointer = document.getElementById('pointer');
+        const fishingProgress = document.getElementById('fishing-progress');
+
+        let currentMap = 1;
+        let posX = 160;
+        let posY = 280;
+        const step = 40; 
+        let obstacles = [];
+
+        let hp = 100;
+        let hunger = 100;
+        let rawFish = 0;  
+        let cookedFish = 0; 
+        let lastMoveTime = 0;
+
+        let timeMode = "SIANG"; 
+        let timeCounter = 0;
+        let monsterActive = false;
+        let monsterX = -100;
+        let monsterY = -100;
+
+        let isFishing = false;
+        let buttonAPressed = false;
+        let pointerTop = 0; 
+        let pointerDirection = 1; 
+        const greenTop = 60;  
+        let successCount = 0;
+        let fishingInterval = null;
+
+        const mapsData = { 
+            1: {
+                title: "MAP 1: CAMPING AREA",
+                obstacles: [{x: 80, y: 200}, {x: 240, y: 200}, {x: 40, y: 120}, {x: 280, y: 120}],
+                html: `
+                    <div class="game-object" style="left: 160px; top: 80px;">🔥</div>
+                    <div class="game-object" id="tenda1" style="left: 40px; top: 120px;">🏕️</div>
+                    <div class="game-object" id="tenda2" style="left: 280px; top: 120px;">🏕️</div>
+                    <div class="game-object tree" style="left: 80px; top: 200px;">🌳</div>
+                    <div class="game-object tree" style="left: 240px; top: 200px;">🌳</div>
+                `
+            },
+            2: {
+                title: "MAP 2: FISHING SPOT",
+                obstacles: [
+                    {x: 240, y: 80}, {x: 280, y: 80}, {x: 240, y: 120}, {x: 280, y: 120},
+                    {x: 240, y: 160}, {x: 280, y: 160}, {x: 240, y: 200}, {x: 280, y: 200},
+                    {x: 40, y: 120}, {x: 40, y: 160}
+                ],
+                html: `
+                    <div class="game-object" style="left: 240px; top: 80px;">🟦</div><div class="game-object" style="left: 280px; top: 80px;">🟦</div>
+                    <div class="game-object" style="left: 240px; top: 120px;">🟦</div><div class="game-object" style="left: 280px; top: 120px;">🟦</div>
+                    <div class="game-object" style="left: 240px; top: 160px;">🟦</div><div class="game-object" style="left: 280px; top: 160px;">🟦</div>
+                    <div class="game-object" style="left: 240px; top: 200px;">🟦</div><div class="game-object" style="left: 280px; top: 200px;">🟦</div>
+                    <div class="game-object tree" style="left: 40px; top: 120px;">🌳</div>
+                    <div class="game-object tree" style="left: 40px; top: 160px;">🌳</div>
+                `
+            }
+        };
+
+        function loadMap(mapNum) { 
+            currentMap = mapNum;
+            mapTitle.innerText = mapsData[mapNum].title;
+            mapObjects.innerHTML = mapsData[mapNum].html;
+            obstacles = mapsData[mapNum].obstacles;
+            if(timeMode === "MALAM" && monsterActive) {
+                monster.style.display = 'flex';
+            } else {
+                monster.style.display = 'none';
+            }
+        }
+
+        function updateHUD() {
+            let timeIcon = timeMode === "SIANG" ? "☀️ SIANG" : "🌙 MALAM";
+            hud.innerHTML = `${timeIcon} (${180 - (timeCounter % 180)}s)<br>❤️HP: ${hp}/100<br>🍖LPR: ${hunger}/100<br>🐟MNT: ${rawFish} | 🐠BKR: ${cookedFish}`;
+        }
+
+        function move(direction) {
+            if (isFishing) return;
+            const sekarang = Date.now();
+            let jedaJalan = 100; 
+            if (hunger <= 30) jedaJalan = 400; 
+            if (sekarang - lastMoveTime < jedaJalan) return;
+            lastMoveTime = sekarang;
+
+            let nextX = posX;
+            let nextY = posY;
+
+            if (direction === 'up') nextY -= step;
+            if (direction === 'down') nextY += step;
+            if (direction === 'left' && posX > 0) nextX -= step;
+            if (direction === 'right' && posX < 320) nextX += step;
+
+            if (currentMap === 1 && nextY < 40) {
+                loadMap(2); posY = 280; player.style.top = posY + 'px'; return;
+            } 
+            if (currentMap === 2 && nextY > 280) {
+                loadMap(1); posY = 40; player.style.top = posY + 'px'; return;
+            }
+
+            if (nextY < 40 || nextY > 280) return;
+
+            const nabrak = obstacles.some(obj => obj.x === nextX && obj.y === nextY);
+
+            if (!nabrak) {
+                posX = nextX; posY = nextY;
+                player.style.left = posX + 'px'; player.style.top = posY + 'px';
+            }
+        }
+
+        function pressA() {
+            if (currentMap === 1 && timeMode === "MALAM") {
+                let dekatTenda1 = (posX === 40 && Math.abs(posY - 120) <= 40) || (posY === 120 && Math.abs(posX - 40) <= 40);
+                let dekatTenda2 = (posX === 280 && Math.abs(posY - 120) <= 40) || (posY === 120 && Math.abs(posX - 280) <= 40);
+                if (dekatTenda1 || dekatTenda2) {
+                    sleepAction();
+                    return;
+                }
+            }
+
+            if (!isFishing) {
+                if (currentMap === 2 && posX === 200 && posY >= 80 && posY <= 200) {
+                    startFishingGame();
+                }
+            } else {
+                buttonAPressed = true; 
+            } 
+        }
+
+        function releaseA() {
+            if (isFishing && buttonAPressed) {
+                buttonAPressed = false;
+                if (pointerTop >= greenTop && pointerTop <= (greenTop + 15)) {
+                    successCount += 1;
+                    if (successCount >= 3) {
+                        endFishingGame(true);
+                    } else {
+                        fishingProgress.innerText = `🏆 ${successCount}/3`;
+                    }
+                } else {
+                    successCount = 0;
+                    fishingProgress.innerText = `🏆 0/3`;
+                }
+            }
+        }
+
+        function sleepAction() {
+            sleepScreen.style.display = 'flex';
+            setTimeout(() => {
+                sleepScreen.style.display = 'none';
+                timeMode = "SIANG";
+                timeCounter = 0;
+                monsterActive = false;
+                monster.style.display = 'none';
+                nightOverlay.style.display = 'none';
+                hunger = Math.max(0, hunger - 6);
+                updateHUD();
+                alert("☀️ Pagi telah tiba! Monster telah menghilang. Kelaparan berkurang 6 poin.");
+            }, 2000);
+        }
+
+        function startFishingGame() {
+            isFishing = true;
+            fishingUi.style.display = 'flex';
+            pointerTop = 0;
+            pointerDirection = 1;
+            successCount = 0;
+            fishingProgress.innerText = `🏆 0/3`;
+            
+            fishingInterval = setInterval(() => {
+                if (!buttonAPressed) {
+                    pointerTop += (3.5 * pointerDirection); 
+                    if (pointerTop < 0 || pointerTop > 134) {
+                        pointerDirection *= -1;
+                    }
+                    pointer.style.top = pointerTop + 'px';
+                }
+            }, 30);
+        } 
+
+        function endFishingGame(win) {
+            clearInterval(fishingInterval);
+            isFishing = false;
+            fishingUi.style.display = 'none';
+            buttonAPressed = false;
+            if (win) {
+                rawFish++;
+                alert("🎣 MANTAP! Dapat 1 Ikan Mentah 🐟!");
+            } else {
+                alert("❌ Memancing dibatalkan!");
+            }
+            updateHUD();
+        }
+
+        function actionB() {
+            if (isFishing) {
+                endFishingGame(false);
+                return;
+            }
+            
+            if (currentMap === 1 && posX === 160 && posY === 120) {
+                if (rawFish > 0) {
+                    rawFish--;
+                    cookedFish++;
+                    alert("🔥 Sukses membakar 1 Ikan Mentah 🐟 menjadi Ikan Bakar 🐠!");
+                    updateHUD();
+                } else {
+                    alert("🔥 Kamu tidak punya Ikan Mentah 🐟 untuk dibakar!");
+                }
+                return;
+            }
+
+            if (cookedFish > 0) {
+                cookedFish--;
+                hunger = Math.min(100, hunger + 30);
+                alert("🐠 Nyam! Makan Ikan Bakar (+30 Kelaparan)");
+                updateHUD();
+            } else if (rawFish > 0) {
+                rawFish--;
+                hunger = Math.min(100, hunger + 1);
+                alert("🐟 Ugh.. Makan Ikan Mentah (+1 Kelaparan saja)");
+                updateHUD();
+            } else {
+                alert("🎒 Tas kosong! Mancing dulu di Map 2!");
+            }
+        }
+
+        function checkDeath() {
+            if (hp <= 0) {
+                alert("💀 HP kamu habis! Game otomatis di-reset!");
+                restartGame();
+            }
+        }
+
+        setInterval(() => {
+            timeCounter++;
+            
+            if (timeMode === "SIANG" && timeCounter >= 180) {
+                timeMode = "MALAM";
+                timeCounter = 0;
+                nightOverlay.style.display = 'block';
+                alert("🌙 Malam telah tiba! Masuk ke Tenda untuk tidur dalam 15 detik sebelum Monster muncul!");
+            }
+
+            if (timeMode === "MALAM" && timeCounter >= 15 && !monsterActive) {
+                monsterActive = true;
+                monsterX = 0;
+                monsterY = 0;
+                monster.style.display = 'flex';
+                monster.style.left = monsterX + 'px';
+                monster.style.top = monsterY + 'px';
+            }
+
+            if (timeCounter % 30 === 0 && hunger > 0) {
+                hunger -= 1;
+            }
+            updateHUD();
+        }, 1000);
+
+        setInterval(() => {
+            if (hunger === 0) {
+                hp -= 10;
+                if (hp < 0) hp = 0;
+                checkDeath();
+            }
+
+            if (timeMode === "MALAM" && monsterActive) {
+                if (monsterX < posX) monsterX += 20;
+                else if (monsterX > posX) monsterX -= 20;
+
+                if (monsterY < posY) monsterY += 20;
+                else if (monsterY > posY) monsterY -= 20;
+
+                monster.style.left = monsterX + 'px';
+                monster.style.top = monsterY + 'px';
+
+                if (monsterX === posX && monsterY === posY) {
+                    hp -= 15;
+                    if (hp < 0) hp = 0;
+                    alert("👾 AWAS! Kamu dicakar monster! (-15 HP)");
+                    checkDeath();
+                }
+            }
+            updateHUD();
+        }, 5000);
+
+        function restartGame() { 
+            hp = 100; hunger = 100; rawFish = 0; cookedFish = 0;
+            posX = 160; posY = 280;
+            timeMode = "SIANG"; timeCounter = 0; monsterActive = false;
+            player.style.left = posX + 'px'; player.style.top = posY + 'px';
+            monster.style.display = 'none'; nightOverlay.style.display = 'none';
+            if(isFishing) clearInterval(fishingInterval); 
+            isFishing = false; fishingUi.style.display = 'none';
+            loadMap(1); updateHUD();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') move('up');
+            if (e.key === 'ArrowDown') move('down');
+            if (e.key === 'ArrowLeft') move('left');
+            if (e.key === 'ArrowRight') move('right');
+            
+            if (e.key.toLowerCase() === 'z') pressA();
+            if (e.key.toLowerCase() === 'x') actionB();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key.toLowerCase() === 'z') releaseA();
+        });
+
+        loadMap(1);
+        updateHUD();
+    </script>
+</body>
+</html>
